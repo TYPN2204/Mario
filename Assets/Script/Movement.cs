@@ -1,27 +1,25 @@
-using System;
-using System.Threading;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-//
 public class Movement : MonoBehaviour
 {
     public bool moving;
-    public float thrust = 1f;
-    public enum MovementMode
-    {
-        Up,   //=0
-        Right,//=1
-        Left,  //=2
-        Stand, //=3
-        Lose
-    };
+    public float thrust = 1.5f;
 
-    public MovementMode movemode;
     public GameObject winScreen, loseScreen;
-    void FixedUpdate()
+    private Rigidbody2D _rb;
+    private Vector2 _force;
+    public Animator animator;
+
+    private void Start()
     {
-        if (moving&& movemode != MovementMode.Lose)
+        _rb = GetComponent<Rigidbody2D>();
+        animator.SetBool("isJump",false);
+        animator.SetBool("isTurnRight",true);
+    }
+
+    void Update()
+    {
+        if (moving)
         {
             Move();
         }
@@ -29,67 +27,75 @@ public class Movement : MonoBehaviour
 
     void Move()
     {
+        animator.SetFloat("Speed",Mathf.Abs(_force.x*thrust));
+
         if (Input.GetKey(KeyCode.UpArrow) && Input.GetKey(KeyCode.LeftArrow))
         {
-            Debug.Log("Up Left");
-            movemode = MovementMode.Up;
-            this.GetComponent<Rigidbody2D>().velocity = new Vector2(-1, 1); 
+            animator.Play("Jump Left Animation");
+            animator.SetBool("isJump",true);
+            animator.SetBool("isTurnRight",false);
+            _rb.velocity = new Vector2(-1, 1); 
             thrust = 3;
-            this.GetComponent<Rigidbody2D>().AddForce(new Vector2(-1, 1) * thrust, ForceMode2D.Impulse);
+            _force = new Vector2(-1, 1);
+            _rb.AddForce(_force * thrust, ForceMode2D.Impulse);
+            thrust = 1.5f;
             moving = false;
-            thrust = 1;
         }
 
         else if (Input.GetKey(KeyCode.UpArrow) && Input.GetKey(KeyCode.RightArrow))
         {
-            Debug.Log("Up Right");
-            movemode = MovementMode.Up;
-            this.GetComponent<Rigidbody2D>().velocity = Vector2.one;
+            animator.Play("Jump Right Animation");
+            animator.SetBool("isJump",true);
+            animator.SetBool("isTurnRight",true);
+            _rb.velocity = Vector2.one;
             thrust = 3;
-            this.GetComponent<Rigidbody2D>().AddForce(Vector2.one * thrust, ForceMode2D.Impulse);
+            _force = Vector2.one;
+            _rb.AddForce(_force * thrust, ForceMode2D.Impulse);
+            thrust = 1.5f;
             moving = false;
-            thrust = 1;
         }
 
         else if (Input.GetKey(KeyCode.UpArrow))
         {
-            Debug.Log("Up");
-            movemode = MovementMode.Up;
-            this.GetComponent<Rigidbody2D>().velocity = Vector2.up;
+            animator.SetBool("isJump",true);
+            _rb.velocity = Vector2.up;
             thrust = 3;
-            this.GetComponent<Rigidbody2D>().AddForce(Vector2.up * thrust, ForceMode2D.Impulse);
+            _force = Vector2.up;
+            _rb.AddForce(_force * thrust, ForceMode2D.Impulse);
+            thrust = 1.5f;
             moving = false;
-            thrust = 1;
         }
 
         else if (Input.GetKey(KeyCode.LeftArrow))
         {
-            Debug.Log("Left");
-            movemode = MovementMode.Left;
-            this.GetComponent<Rigidbody2D>().velocity = Vector2.left;
-            this.GetComponent<Rigidbody2D>().AddForce(Vector2.left * thrust ,ForceMode2D.Impulse);
+            animator.Play("Go Left Animation");
+            animator.SetBool("isTurnRight",false);
+            animator.SetBool("isJump",false);
+            _rb.velocity = Vector2.left;
             moving = false;
         }
 
         else if (Input.GetKey(KeyCode.RightArrow))
-        {
-            Debug.Log("Right");
-            movemode = MovementMode.Right;
-            this.GetComponent<Rigidbody2D>().velocity = Vector2.right;
-            this.GetComponent<Rigidbody2D>().AddForce(Vector2.right * thrust, ForceMode2D.Impulse);
+        { 
+            animator.Play("Go Right Animation");
+            animator.SetBool("isTurnRight",true);
+            animator.SetBool("isJump",false);
+            _rb.velocity = Vector2.right;
             moving = false;
         }
 
-        else{
-            Debug.Log("Stand");
-            movemode = MovementMode.Stand;
-            return;
+        else
+        {
+            animator.SetFloat("Speed",0);
+            animator.SetBool("isJump",false);
         }
+
     }
     void OnCollisionStay2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
+            animator.SetBool("isJump",false);
             moving = true;
         }
         else if(collision.gameObject.CompareTag("Ground End")){
@@ -99,7 +105,6 @@ public class Movement : MonoBehaviour
                 ground.OffCollider();
             }
             moving = true;
-            movemode = MovementMode.Lose;
             thrust = 10;
             this.GetComponent<Rigidbody2D>().velocity = Vector2.up;
             this.GetComponent<Rigidbody2D>().AddForce(Vector2.up * thrust ,ForceMode2D.Impulse);
