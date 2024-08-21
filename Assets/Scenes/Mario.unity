@@ -1043,7 +1043,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moving: 0
-  thrust: 1.5
+  jump: 3
+  aV: 3
+  maxVx: 4
   winScreen: {fileID: 1206059351}
   loseScreen: {fileID: 1903079276}
   animator: {fileID: 1880396354}
